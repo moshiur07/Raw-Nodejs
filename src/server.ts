@@ -1,26 +1,30 @@
 import http, { IncomingMessage, Server, ServerResponse } from "http";
 import config from "./config";
+import { route } from "./helpers/RouteHandler";
+import { sendJson } from "./helpers/sendJson";
+import "./routes";
+
 
 
 const server: Server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
     console.log("server is running...");
 
     // ! root
-    if (req.url == '/' && req.method == "GET") {
-        res.writeHead(200, { "content-type": "application/json" })
-        res.end(JSON.stringify({
-            message: "Hello from raw node js with typescript...",
-            path: req.url,
-        }))
-    }
 
-    // ! health check
-    if (req.url == '/api' && req.method == "GET") {
-        res.writeHead(200, { "content-type": "application/json" })
-        res.end(JSON.stringify({
-            message: "Vibe Check",
-            path: req.url,
-        }))
+    const method = req.method?.toUpperCase() || "";
+    const path = req.url || "";
+    const methodMap = route.get(method)
+    const handler = methodMap?.get(path);
+
+    if (handler) {
+        handler(req, res)
+    } else {
+        const data = {
+            success: false,
+            message: "Route not found !!!",
+            path,
+        }
+        sendJson(res, 404, data)
     }
 
     // ! user
