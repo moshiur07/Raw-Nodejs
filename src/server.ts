@@ -3,14 +3,10 @@ import config from "./config";
 import { route } from "./helpers/RouteHandler";
 import { sendJson } from "./helpers/sendJson";
 import "./routes";
-
+import findDynamicRoute from "./helpers/dynamicRoute";
 
 
 const server: Server = http.createServer((req: IncomingMessage, res: ServerResponse) => {
-    console.log("server is running...");
-
-    // ! root
-
     const method = req.method?.toUpperCase() || "";
     const path = req.url || "";
     const methodMap = route.get(method)
@@ -18,39 +14,20 @@ const server: Server = http.createServer((req: IncomingMessage, res: ServerRespo
 
     if (handler) {
         handler(req, res)
-    } else {
+    }
+    else if (findDynamicRoute(method, path)) {
+        const matched = findDynamicRoute(method, path);
+        console.log(matched);
+        (req as any).params = matched?.params;
+        matched?.handler(req, res);
+    }
+    else {
         const data = {
             success: false,
             message: "Route not found !!!",
             path,
         }
         sendJson(res, 404, data)
-    }
-
-    // ! user
-    if (req.url == '/api/user' && req.method == "POST") {
-        // const user = {
-        //     id: 1,
-        //     name: "David"
-        // }
-        // res.writeHead(200, { "content-type": "application/json" })
-        // res.end(JSON.stringify(user))
-        let body = "";
-        // * listen for data chunk
-        req.on("data", (chunk) => {
-            body += chunk.toString()
-        })
-        req.on("end", () => {
-            try {
-                const parsedBody = JSON.parse(body)
-                console.log(parsedBody);
-                const stringify = JSON.stringify(parsedBody)
-                console.log(stringify);
-                res.end(stringify)
-            } catch (err: any) {
-                console.log(err?.message);
-            }
-        })
     }
 })
 

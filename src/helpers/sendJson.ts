@@ -1,6 +1,6 @@
 import { ServerResponse } from "http";
 
-export const sendJson = (res: ServerResponse, statusCode: number, data: any) => {
+export const sendJson = (res: ServerResponse, statusCode: number, data?: any) => {
     res.writeHead(statusCode, { "content-type": "application/json" })
     res.end(JSON.stringify(data))
 } 
